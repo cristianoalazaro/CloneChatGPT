@@ -8,6 +8,7 @@ import { Header } from "@/components/Header"
 import { Sidebar } from "@/components/Sidebar"
 import { Chat } from "@/types/Chat"
 import { useEffect, useState } from "react"
+import { SidebarChatButton } from '@/components/SidebarChatButton'
 
 const Page = () => {
   const [sidebarOpened, setSidebarOpened] = useState(false)
@@ -79,7 +80,7 @@ const Page = () => {
         },
         ...chatList
       ])
-      
+
       setChatActiveId(newChatId)
     } else {
       //Update a chat
@@ -97,6 +98,32 @@ const Page = () => {
     setAILoading(true)
   }
 
+  const handleSelectChat = (id: string) => {
+    if (AILoading) return
+
+    if (chatList.find(item => item.id === id))
+      setChatActiveId(id)
+
+    closeSidebar()
+  }
+
+  const handleDeleteChat = (id: string) => {
+    const chatListClone = [...chatList]
+    const chatIndex = chatListClone.findIndex(item => item.id === id)
+    chatListClone.splice(chatIndex, 1)
+    setChatList(chatListClone)
+    setChatActiveId('')
+  }
+
+  const handleEditChat = (id: string, newTitle: string) => {
+    if (newTitle) {
+      const chatListClone = [...chatList]
+      const chatIndex = chatListClone.findIndex(item => item.id === id)
+      chatListClone[chatIndex].title = newTitle
+      setChatList(chatListClone)
+    }
+  }
+
   return (
     <main className="flex min-h-screen bg-gpt-gray">
       <Sidebar
@@ -105,21 +132,30 @@ const Page = () => {
         onClear={handleClearConversation}
         onNewChat={handleNewChat}
       >
-        ...
+        {chatList.map(item => (
+          <SidebarChatButton
+            key={item.id}
+            chatItem={item}
+            active={item.id === chatActiveId}
+            onClick={handleSelectChat}
+            onDelete={handleDeleteChat}
+            onEdit={handleEditChat}
+          />
+        ))}
       </Sidebar>
       <section className="flex flex-col w-full">
         <Header
           openSidebarClick={openSidebar}
-          title={`Bla Bla Bla`}
+          title={chatActive ? chatActive.title : 'Nova Conversa'}
           newChatClick={handleNewChat}
         />
 
-        <ChatArea 
+        <ChatArea
           chat={chatActive}
           loading={AILoading}
         />
 
-        <Footer 
+        <Footer
           onSendMessage={handleSendMessage}
           disabled={AILoading}
         />
