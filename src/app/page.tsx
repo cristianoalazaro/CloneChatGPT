@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/Sidebar"
 import { Chat } from "@/types/Chat"
 import { useEffect, useState } from "react"
 import { SidebarChatButton } from '@/components/SidebarChatButton'
+import { openai } from '@/utils/openai'
 
 const Page = () => {
   const [sidebarOpened, setSidebarOpened] = useState(false)
@@ -26,21 +27,24 @@ const Page = () => {
       getAIResponse()
   }, [AILoading])
 
-  const getAIResponse = () => {
-    setTimeout(() => {
-      const chatListClone = [...chatList]
-      const chatIndex = chatListClone.findIndex(item => item.id === chatActiveId)
+  const getAIResponse = async () => {
+    const chatListClone = [...chatList]
+    const chatIndex = chatListClone.findIndex(item => item.id === chatActiveId)
 
-      if (chatIndex > -1) {
+    if (chatIndex > -1) {
+      const response = await openai.generate(
+        openai.translateMessages(chatListClone[chatIndex].messages))
+
+      if (response) {
         chatListClone[chatIndex].messages.push({
           id: uuidv4(),
           author: 'ai',
-          body: 'Aqui vai a resposta da AI'
+          body: response
         })
       }
-      setChatList(chatListClone)
-      setAILoading(false)
-    }, 2000);
+    }
+    setChatList(chatListClone)
+    setAILoading(false)
   }
 
   const openSidebar = () => setSidebarOpened(true);
